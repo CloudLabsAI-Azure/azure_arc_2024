@@ -3,7 +3,6 @@ param (
     [string]$adminPassword,
     [string]$spnClientId,
     [string]$spnClientSecret,
-    [string]$spnProviderId,
     [string]$spnTenantId,
     [string]$subscriptionId,
     [string]$resourceGroup,
@@ -19,6 +18,12 @@ param (
     [string]$autoDeployClusterResource,
     [string]$autoUpgradeClusterResource
 )
+
+
+az login --service-principal -u $spnClientId -p $spnClientSecret --tenant $spnTenantId 
+
+$spnProviderId=$(az ad sp list --display-name "Microsoft.AzureStackHCI" --output json) | ConvertFrom-Json
+$spnProviderId = $spnProviderId.id
 
 [System.Environment]::SetEnvironmentVariable('adminUsername', $adminUsername,[System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('spnClientID', $spnClientId,[System.EnvironmentVariableTarget]::Machine)
