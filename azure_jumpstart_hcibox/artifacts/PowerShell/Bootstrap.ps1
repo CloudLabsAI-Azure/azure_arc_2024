@@ -13,10 +13,9 @@ param (
     [string]$registerCluster,
     [string]$deployAKSHCI,
     [string]$deployResourceBridge,
-    [string]$natDNS,
-    [string]$rdpPort,
-    [string]$autoDeployClusterResource,
-    [string]$autoUpgradeClusterResource
+    [string]$natDNS
+    
+  
 )
 
 
@@ -24,6 +23,10 @@ az login --service-principal -u $spnClientId -p $spnClientSecret --tenant $spnTe
 
 $spnProviderId=$(az ad sp list --display-name "Microsoft.AzureStackHCI" --output json) | ConvertFrom-Json
 $spnProviderId = $spnProviderId.id
+
+$autoDeployClusterResource = "false"
+$autoUpgradeClusterResource = "false"
+$rdpPort = "3389"
 
 [System.Environment]::SetEnvironmentVariable('adminUsername', $adminUsername,[System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('spnClientID', $spnClientId,[System.EnvironmentVariableTarget]::Machine)
