@@ -21,10 +21,13 @@ param (
 )
 
 
-az login --service-principal -u $spnClientId -p $spnClientSecret --tenant $spnTenantId 
-
+az login -u $azureusername -p $azurepassword  
 $spnProviderId=$(az ad sp list --display-name "Microsoft.AzureStackHCI" --output json) | ConvertFrom-Json
 $spnProviderId = $spnProviderId.id
+
+
+az login --service-principal -u $spnClientId -p $spnClientSecret --tenant $spnTenantId 
+
 
 $autoDeployClusterResource = "false"
 $autoUpgradeClusterResource = "false"
