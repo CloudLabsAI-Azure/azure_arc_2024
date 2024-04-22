@@ -13,7 +13,9 @@ param (
     [string]$registerCluster,
     [string]$deployAKSHCI,
     [string]$deployResourceBridge,
-    [string]$natDNS
+    [string]$natDNS,
+    [string]$azureusername,
+    [string]$azurepassword
     
   
 )
