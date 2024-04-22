@@ -21,12 +21,6 @@ param (
 )
 
 
-az login -u $azureusername -p $azurepassword  
-$spnProviderId=$(az ad sp list --display-name "Microsoft.AzureStackHCI" --output json) | ConvertFrom-Json
-$spnProviderId = $spnProviderId.id
-
-
-az login --service-principal -u $spnClientId -p $spnClientSecret --tenant $spnTenantId 
 
 
 $autoDeployClusterResource = "false"
@@ -37,7 +31,6 @@ $rdpPort = "3389"
 [System.Environment]::SetEnvironmentVariable('spnClientID', $spnClientId,[System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('spnClientSecret', $spnClientSecret,[System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('spnTenantId', $spnTenantId,[System.EnvironmentVariableTarget]::Machine)
-[System.Environment]::SetEnvironmentVariable('spnProviderId', $spnProviderId,[System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('SPN_CLIENT_ID', $spnClientId,[System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('SPN_CLIENT_SECRET', $spnClientSecret,[System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('SPN_TENANT_ID', $spnTenantId,[System.EnvironmentVariableTarget]::Machine)
@@ -122,6 +115,19 @@ $ProgressPreference = 'SilentlyContinue'
 Invoke-WebRequest -Uri https://aka.ms/installazurecliwindowsx64 -OutFile .\AzureCLI.msi
 Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'
 Remove-Item .\AzureCLI.msi
+Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
+
+refreshenv
+
+az login -u $azureusername -p $azurepassword  
+$spnProviderId=$(az ad sp list --display-name "Microsoft.AzureStackHCI" --output json) | ConvertFrom-Json
+$spnProviderId = $spnProviderId.id
+
+
+az login --service-principal -u $spnClientId -p $spnClientSecret --tenant $spnTenantId 
+
+
+[System.Environment]::SetEnvironmentVariable('spnProviderId', $spnProviderId,[System.EnvironmentVariableTarget]::Machine)
 
 Write-Host "Downloading Azure Stack HCI configuration scripts"
 Invoke-WebRequest "https://raw.githubusercontent.com/Azure/arc_jumpstart_docs/main/img/wallpaper/hcibox_wallpaper_dark.png" -OutFile $HCIPath\wallpaper.png
