@@ -1494,7 +1494,7 @@ function Set-HCIDeployPrereqs {
 
         Write-Host "Checking extension status for $($PSItem.Name)"
 
-        $requiredExtensions = @('AzureEdgeTelemetryAndDiagnostics', 'AzureEdgeDeviceManagement', 'AzureEdgeLifecycleManager')
+        $requiredExtensions = @('AzureEdgeTelemetryAndDiagnostics', 'AzureEdgeLifecycleManager')
         $attempts = 0
         $maxAttempts = 90
 
