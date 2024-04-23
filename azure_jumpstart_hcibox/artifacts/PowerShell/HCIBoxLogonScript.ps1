@@ -24,6 +24,17 @@ if(-not $($cliDir.Parent.Attributes.HasFlag([System.IO.FileAttributes]::Hidden))
 $Env:AZURE_CONFIG_DIR = $cliDir.FullName
 
 # Login to Azure CLI with service principal provided by user
+
+
+az login -u $Env:azureusername -p $Env:azurepassword  
+$spnProviderId=$(az ad sp list --display-name "Microsoft.AzureStackHCI" --output json) | ConvertFrom-Json
+$spnProviderId = $spnProviderId.id
+
+
+
+
+[System.Environment]::SetEnvironmentVariable('spnProviderId', $spnProviderId,[System.EnvironmentVariableTarget]::Machine)
+
 Write-Header "Az CLI Login"
 az login --service-principal --username $Env:spnClientID --password=$Env:spnClientSecret --tenant $Env:spnTenantId
 
