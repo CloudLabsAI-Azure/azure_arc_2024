@@ -27,6 +27,8 @@ $autoDeployClusterResource = "false"
 $autoUpgradeClusterResource = "false"
 $rdpPort = "3389"
 
+[System.Environment]::SetEnvironmentVariable('azureusername', $azureusername,[System.EnvironmentVariableTarget]::Machine)
+[System.Environment]::SetEnvironmentVariable('azurepassword', $azurepassword,[System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('adminUsername', $adminUsername,[System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('spnClientID', $spnClientId,[System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('spnClientSecret', $spnClientSecret,[System.EnvironmentVariableTarget]::Machine)
