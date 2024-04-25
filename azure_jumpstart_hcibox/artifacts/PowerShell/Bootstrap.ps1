@@ -85,39 +85,6 @@ Start-Transcript -Path "$($HCIBoxConfig.Paths["LogsDir"])\Bootstrap.log"
 Write-Host "Extending C:\ partition to the maximum size"
 Resize-Partition -DriveLetter C -Size $(Get-PartitionSupportedSize -DriveLetter C).SizeMax
 
-# Installing tools
-Write-Header "Installing Chocolatey Apps"
-try {
-    choco config get cacheLocation
-}
-catch {
-    Write-Output "Chocolatey not detected, trying to install now"
-    Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-}
-
-foreach ($app in $HCIBoxConfig.ChocolateyPackagesList)
-{
-    Write-Host "Installing $app"
-    & choco install $app /y -Force | Write-Output
-}
-
-# Installing modules
-Write-Header "Installing PowerShell modules"
-
-Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-
-foreach ($module in $HCIBoxConfig.PowerShellModulesList)
-{
-    Write-Host "Installing $module"
-    Install-Module -Name $module -AllowClobber -Force
-}
-
-Write-Header "Install Azure CLI (64-bit not available via Chocolatey)"
-$ProgressPreference = 'SilentlyContinue'
-Invoke-WebRequest -Uri https://aka.ms/installazurecliwindowsx64 -OutFile .\AzureCLI.msi
-Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'
-Remove-Item .\AzureCLI.msi
-Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
 
 refreshenv
 
@@ -150,27 +117,6 @@ $adminPassword = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBa
 (Get-Content -Path $HCIPath\HCIBox-Config.psd1) -replace '%staging-password%',$adminPassword | Set-Content -Path $HCIPath\HCIBox-Config.psd1
 (Get-Content -Path $HCIPath\HCIBox-Config.psd1) -replace '%staging-natDNS%',$natDNS | Set-Content -Path $HCIPath\HCIBox-Config.psd1
 
-# Disabling Windows Server Manager Scheduled Task
-Write-Host "Disabling Windows Server Manager scheduled task."
-Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask
-
-# Disable Server Manager WAC prompt
-Write-Host "Disabling Server Manager WAC prompt."
-$RegistryPath = "HKLM:\SOFTWARE\Microsoft\ServerManager"
-$Name = "DoNotPopWACConsoleAtSMLaunch"
-$Value = "1"
-if (-not (Test-Path $RegistryPath)) {
-    New-Item -Path $RegistryPath -Force | Out-Null
-}
-New-ItemProperty -Path $RegistryPath -Name $Name -Value $Value -PropertyType DWORD -Force
-
-# Disable Network Profile prompt
-Write-Host "Disabling network profile prompt."
-$RegistryPath = "HKLM:\System\CurrentControlSet\Control\Network\NewNetworkWindowOff"
-if (-not (Test-Path $RegistryPath)) {
-    New-Item -Path $RegistryPath -Force | Out-Null
-}
-
 # Configuring CredSSP and WinRM
 Write-Host "Enabling CredSSP."
 Enable-WSManCredSSP -Role Server -Force | Out-Null
@@ -181,60 +127,6 @@ Write-Host "Creating scheduled task for HCIBoxLogonScript.ps1"
 $Trigger = New-ScheduledTaskTrigger -AtLogOn
 $Action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument $HCIPath\HCIBoxLogonScript.ps1
 Register-ScheduledTask -TaskName "HCIBoxLogonScript" -Trigger $Trigger -User $adminUsername -Action $Action -RunLevel "Highest" -Force
-
-# Disable Edge 'First Run' Setup
-Write-Host "Configuring Microsoft Edge."
-$edgePolicyRegistryPath  = 'HKLM:SOFTWARE\Policies\Microsoft\Edge'
-$firstRunRegistryName  = 'HideFirstRunExperience'
-$firstRunRegistryValue = '0x00000001'
-$savePasswordRegistryName = 'PasswordManagerEnabled'
-$savePasswordRegistryValue = '0x00000000'
-
-if (-NOT (Test-Path -Path $edgePolicyRegistryPath)) {
-    New-Item -Path $edgePolicyRegistryPath -Force | Out-Null
-}
-
-New-ItemProperty -Path $edgePolicyRegistryPath -Name $firstRunRegistryName -Value $firstRunRegistryValue -PropertyType DWORD -Force
-New-ItemProperty -Path $edgePolicyRegistryPath -Name $savePasswordRegistryName -Value $savePasswordRegistryValue -PropertyType DWORD -Force
-
-# Change RDP Port
-Write-Host "Updating RDP Port - RDP port number from configuration is $rdpPort"
-if (($rdpPort -ne $null) -and ($rdpPort -ne "") -and ($rdpPort -ne "3389"))
-{
-    Write-Host "Configuring RDP port number to $rdpPort"
-    $TSPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server'
-    $RDPTCPpath = $TSPath + '\Winstations\RDP-Tcp'
-    Set-ItemProperty -Path $TSPath -name 'fDenyTSConnections' -Value 0
-
-    # RDP port
-    $portNumber = (Get-ItemProperty -Path $RDPTCPpath -Name 'PortNumber').PortNumber
-    Write-Host "Current RDP PortNumber: $portNumber"
-    if (!($portNumber -eq $rdpPort))
-    {
-      Write-Host Setting RDP PortNumber to $rdpPort
-      Set-ItemProperty -Path $RDPTCPpath -name 'PortNumber' -Value $rdpPort
-      Restart-Service TermService -force
-    }
-
-    #Setup firewall rules
-    if ($rdpPort -eq 3389)
-    {
-      netsh advfirewall firewall set rule group="remote desktop" new Enable=Yes
-    }
-    else
-    {
-      $systemroot = get-content env:systemroot
-      netsh advfirewall firewall add rule name="Remote Desktop - Custom Port" dir=in program=$systemroot\system32\svchost.exe service=termservice action=allow protocol=TCP localport=$RDPPort enable=yes
-    }
-
-    Write-Host "RDP port configuration complete."
-}
-
-# Install Hyper-V and reboot
-Write-Header "Installing Hyper-V."
-Enable-WindowsOptionalFeature -Online -FeatureName Containers -All -NoRestart
-Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
-Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementTools -Restart
 
 # Clean up Bootstrap.log
 Write-Header "Clean up Bootstrap.log."
