@@ -11,7 +11,8 @@ Start-Transcript -Path "$($HCIBoxConfig.Paths.LogsDir)\Generate-ARM-Template.log
 
 # Add necessary role assignments
 $ErrorActionPreference = "Continue"
-New-AzRoleAssignment -ObjectId $env:spnProviderId -RoleDefinitionName "Azure Connected Machine Resource Manager" -ResourceGroup $env:resourceGroup -ErrorAction Continue
+# Next step will done manually to avoid the issues
+#New-AzRoleAssignment -ObjectId $env:spnProviderId -RoleDefinitionName "Azure Connected Machine Resource Manager" -ResourceGroup $env:resourceGroup -ErrorAction Continue
 $ErrorActionPreference = "Stop"
 
 $arcNodes = Get-AzConnectedMachine -ResourceGroup $env:resourceGroup
