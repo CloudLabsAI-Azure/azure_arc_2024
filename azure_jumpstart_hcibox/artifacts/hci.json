@@ -22,7 +22,7 @@
         },
         "softDeleteRetentionDays": {
             "type": "int",
-            "defaultValue": 30
+            "defaultValue": 7
         },
         "diagnosticStorageAccountName": {
             "type": "string",
@@ -32,7 +32,7 @@
         },
         "logsRetentionInDays": {
             "type": "int",
-            "defaultValue": 30,
+            "defaultValue": 7,
             "minValue": 0,
             "maxValue": 365,
             "metadata": {
