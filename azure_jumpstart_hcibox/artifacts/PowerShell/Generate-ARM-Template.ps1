@@ -2,8 +2,8 @@ $WarningPreference = "SilentlyContinue"
 $ErrorActionPreference = "Stop"
 $ProgressPreference = 'SilentlyContinue'
 
- $azureAppCred = (New-Object System.Management.Automation.PSCredential $env:spnClientID, (ConvertTo-SecureString -String $env:spnClientSecret -AsPlainText -Force))
- Connect-AzAccount -ServicePrincipal -SubscriptionId $env:subscriptionId -TenantId $env:spnTenantId -Credential $azureAppCred
+$azureAppCred = (New-Object System.Management.Automation.PSCredential $env:spnClientID, (ConvertTo-SecureString -String $env:spnClientSecret -AsPlainText -Force))
+Connect-AzAccount -ServicePrincipal -SubscriptionId $env:subscriptionId -TenantId $env:spnTenantId -Credential $azureAppCred
 
 # Set paths
 $Env:HCIBoxDir = "C:\HCIBox"
